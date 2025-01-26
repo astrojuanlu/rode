@@ -33,6 +33,35 @@ where
 }
 
 /// A wrapper function to expose euler_method_demo to Python.
+///
+/// # Arguments
+///
+/// * `dx_dt` - A function that computes the derivative of `y` with respect to `t`.
+/// * `y0` - The initial value of `y`.
+/// * `t` - An array of time points at which to compute the solution.
+/// * `h` - The step size.
+///
+/// # Returns
+///
+/// An array of `y` values computed at each time point in `t`.
+///
+/// # Example
+///
+/// ```python
+/// import numpy as np
+/// from rode import euler_method_demo_py
+///
+/// def dx_dt(x):
+///     return -2 * x
+///
+/// y0 = 1.0
+/// t_start = 0.0
+/// t_end = 5.0
+/// num_points = 100
+///
+/// result = euler_method_demo_py(dx_dt, y0, t_start, t_end, num_points)
+/// print(result)
+/// ```
 #[pyfunction]
 fn euler_method_demo_py(
     py: Python,
