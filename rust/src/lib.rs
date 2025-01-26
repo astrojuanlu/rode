@@ -31,9 +31,9 @@ fn euler_method_demo_py(
     t_start: f64,
     t_end: f64,
     num_points: usize,
-) -> Bound<'_, PyArray1<f64>> {
+) -> PyResult<Bound<'_, PyArray1<f64>>> {
     let result = euler_method_demo(y0, t_start, t_end, num_points);
-    result.into_pyarray(py)
+    Ok(result.into_pyarray(py))
 }
 
 /// A Python module implemented in Rust.
