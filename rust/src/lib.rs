@@ -1,6 +1,6 @@
-use ndarray::Array1;
+use numpy::ndarray::Array1;
+use numpy::{IntoPyArray, PyArray1};
 use pyo3::prelude::*;
-use std::f64::consts::PI;
 
 /// Formats the sum of two numbers as string.
 #[pyfunction]
@@ -29,10 +29,24 @@ pub fn euler_method_demo(y0: f64, t_start: f64, t_end: f64, num_points: usize) -
     euler_method(dx_dt, y0, &t, h)
 }
 
+/// A wrapper function to expose euler_method_demo to Python.
+#[pyfunction]
+fn euler_method_demo_py(
+    py: Python,
+    y0: f64,
+    t_start: f64,
+    t_end: f64,
+    num_points: usize,
+) -> Bound<'_, PyArray1<f64>> {
+    let result = euler_method_demo(y0, t_start, t_end, num_points);
+    result.into_pyarray(py)
+}
+
 /// A Python module implemented in Rust.
 #[pymodule]
 #[pyo3(name = "_rode")]
 fn rode(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
+    m.add_function(wrap_pyfunction!(euler_method_demo_py, m)?)?;
     Ok(())
 }
