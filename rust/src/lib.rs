@@ -105,3 +105,5 @@ fn rode(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(euler_method_demo_full_py, m)?)?;
     Ok(())
 }
+
+pub mod orbit;
