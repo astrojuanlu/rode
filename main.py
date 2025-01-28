@@ -1,6 +1,6 @@
 import numpy as np
 
-from rode import euler_method_demo_py, euler_method_demo_full_py
+from rode import euler_method_demo_py, euler_method_demo_alt_py
 
 
 def y(x):
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     t = np.linspace(t_start, t_end, num_points)
     h = t[1] - t[0]
 
-    results = euler_method_demo_full_py(y, y0_demo, t, h)
+    results = euler_method_demo_alt_py(y, y0_demo, t, h)
 
     print(type(results))
     print(results)

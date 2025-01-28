@@ -1,7 +1,7 @@
 use numpy::ndarray::Array1;
 use std::f64::consts::PI;
 
-use rode::euler_method;
+use rode::euler::euler_method;
 
 fn main() {
     // Demonstrate euler_method

@@ -12,7 +12,7 @@ def euler_method_demo_py(
     ...
 
 
-def euler_method_demo_full_py(
+def euler_method_demo_alt_py(
     dx_dt: t.Callable[[float], float],
     y0: float,
     t: np.ndarray,
