@@ -1,4 +1,4 @@
-use ndarray::Array1;
+use numpy::ndarray::Array1;
 use std::f64::consts::PI;
 
 use rode::{euler_method, euler_method_demo};
