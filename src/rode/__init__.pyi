@@ -10,3 +10,12 @@ def euler_method_demo_py(
     num_points: int,
 ) -> onpt.Array1D[np.float]:
     ...
+
+
+def euler_method_demo_full_py(
+    dx_dt: t.Callable[[float], float],
+    y0: float,
+    t: np.ndarray,
+    h: float,
+) -> onpt.Array1D[np.float]:
+    ...

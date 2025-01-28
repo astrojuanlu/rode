@@ -1,5 +1,5 @@
 use numpy::ndarray::Array1;
-use numpy::{IntoPyArray, PyArray1};
+use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1};
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
@@ -79,10 +79,29 @@ fn euler_method_demo_py(
     Ok(result.into_pyarray(py))
 }
 
+/// Another wrapper function to expose euler_method_demo to Python.
+#[pyfunction]
+fn euler_method_demo_full_py<'py>(
+    py: Python<'py>,
+    dx_dt: Py<PyAny>,
+    y0: f64,
+    t: PyReadonlyArray1<'py, f64>,
+    h: f64,
+) -> PyResult<Bound<'py, PyArray1<f64>>> {
+    let dx_dt_closure = |x: f64| -> f64 {
+        let args = (x,);
+        dx_dt.call1(py, args).unwrap().extract(py).unwrap()
+    };
+    let t_array = t.as_array().to_owned();
+    let result = euler_method(dx_dt_closure, y0, &t_array, h);
+    Ok(result.into_pyarray(py))
+}
+
 /// A Python module implemented in Rust.
 #[pymodule]
 #[pyo3(name = "_rode")]
 fn rode(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(euler_method_demo_py, m)?)?;
+    m.add_function(wrap_pyfunction!(euler_method_demo_full_py, m)?)?;
     Ok(())
 }
