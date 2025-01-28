@@ -2,12 +2,6 @@ use numpy::ndarray::Array1;
 use numpy::{IntoPyArray, PyArray1};
 use pyo3::prelude::*;
 
-/// Formats the sum of two numbers as string.
-#[pyfunction]
-fn sum_as_string(a: usize, b: usize) -> PyResult<String> {
-    Ok((a + b).to_string())
-}
-
 /// Implements the Euler method to solve ordinary differential equations.
 pub fn euler_method<F>(dx_dt: F, y0: f64, t: &Array1<f64>, h: f64) -> Array1<f64>
 where
@@ -46,7 +40,6 @@ fn euler_method_demo_py(
 #[pymodule]
 #[pyo3(name = "_rode")]
 fn rode(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(sum_as_string, m)?)?;
     m.add_function(wrap_pyfunction!(euler_method_demo_py, m)?)?;
     Ok(())
 }
