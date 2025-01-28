@@ -1,3 +1,6 @@
+// NOTE: Only the strong elliptic case is tested,
+// proceed with caution!
+
 use std::f64::consts::PI;
 
 fn kepler_equation(E: f64, M: f64, ecc: f64) -> f64 {
@@ -55,7 +58,7 @@ fn nu_to_D(nu: f64) -> f64 {
 }
 
 fn nu_to_E(nu: f64, ecc: f64) -> f64 {
-    2.0 * ((1.0 - ecc) / (1.0 + ecc)).sqrt() * (nu / 2.0).tan().atan()
+    2.0 * (((1.0 - ecc) / (1.0 + ecc)).sqrt() * (nu / 2.0).tan()).atan()
 }
 
 fn nu_to_F(nu: f64, ecc: f64) -> f64 {
@@ -63,7 +66,7 @@ fn nu_to_F(nu: f64, ecc: f64) -> f64 {
 }
 
 fn E_to_nu(E: f64, ecc: f64) -> f64 {
-    2.0 * ((1.0 + ecc) / (1.0 - ecc)).sqrt() * (E / 2.0).tan().atan()
+    2.0 * (((1.0 + ecc) / (1.0 - ecc)).sqrt() * (E / 2.0).tan()).atan()
 }
 
 fn F_to_nu(F: f64, ecc: f64) -> f64 {
@@ -91,6 +94,7 @@ fn M_to_D(M: f64) -> f64 {
 }
 
 fn E_to_M(E: f64, ecc: f64) -> f64 {
+    // The plain original Kepler equation!
     E - ecc * E.sin()
 }
 
@@ -316,31 +320,101 @@ mod test {
     use rstest::*;
 
     #[fixture]
-    fn orbit() -> Orbit {
+    fn simple_orbit() -> Orbit {
         Orbit {
             k: 398600.4418,
-            p: 6780.8472106,
-            ecc: 0.00130547,
-            inc_deg: 51.6012092,
-            raan_deg: 198.37949974,
-            argp_deg: 39.26289661,
-            nu_deg: 46.59580468,
+            p: 6780.847210604138,
+            ecc: 0.0013054715646115549,
+            inc_deg: 51.60120920467586,
+            raan_deg: 198.3794997426161,
+            argp_deg: 39.2628966116123,
+            nu_deg: 46.59580467705745,
         }
     }
 
     #[rstest]
-    fn test_noop_farnocchia_coe(orbit: Orbit) {
+    fn test_nu_to_E(simple_orbit: Orbit) {
+        let expected_E = 0.8123021772188911; // Computed with poliastro
+
+        let E = nu_to_E(simple_orbit.nu_deg.to_radians(), simple_orbit.ecc);
+
+        assert!(
+            (E - expected_E).abs() < 1e-18,
+            "Expected: {}, Computed: {}",
+            expected_E,
+            E
+        );
+    }
+
+    #[rstest]
+    fn test_E_to_M(simple_orbit: Orbit) {
+        let E = 0.81230217721889109; // Arbitrary value
+        let expected_M = 0.811354571178513; // Computed with poliastro
+
+        let M = E_to_M(E, simple_orbit.ecc);
+
+        assert!(
+            (M - expected_M).abs() < 1e-18,
+            "Expected: {}, Computed: {}",
+            expected_M,
+            M
+        );
+    }
+
+    #[rstest]
+    fn test_delta_t_from_nu(simple_orbit: Orbit) {
+        let expected_delta_t0 = 717.5775579604818; // Computed with poliastro
+
+        let delta_t0 = delta_t_from_nu(
+            simple_orbit.nu_deg.to_radians(),
+            simple_orbit.ecc,
+            simple_orbit.k,
+            simple_orbit.p / (1.0 + simple_orbit.ecc),
+            1e-2,
+        );
+
+        assert!(
+            (delta_t0 - expected_delta_t0).abs() < 1e-12,
+            "Expected: {}, Computed: {}",
+            expected_delta_t0,
+            delta_t0
+        );
+    }
+
+    #[rstest]
+    fn test_nu_from_delta_t(simple_orbit: Orbit) {
+        let delta_t = 20717.57755796048; // Arbitrary value
+        let expected_nu = -1.7102617293760642; // Computed with poliastro
+
+        let nu = nu_from_delta_t(
+            delta_t,
+            simple_orbit.ecc,
+            simple_orbit.k,
+            simple_orbit.p / (1.0 + simple_orbit.ecc),
+            1e-2,
+        );
+
+        assert!(
+            (nu - expected_nu).abs() < 1e-18,
+            "Expected: {}, Computed: {}",
+            expected_nu,
+            nu
+        )
+    }
+
+    #[rstest]
+    fn test_noop_farnocchia_coe(simple_orbit: Orbit) {
         let tof = 0.0;
-        let expected_nu: f64 = orbit.nu_deg.to_radians();
+        let expected_nu: f64 = simple_orbit.nu_deg.to_radians();
 
         let nu = farnocchia_coe(
-            orbit.k,
-            orbit.p,
-            orbit.ecc,
-            orbit.inc_deg.to_radians(),
-            orbit.raan_deg.to_radians(),
-            orbit.argp_deg.to_radians(),
-            orbit.nu_deg.to_radians(),
+            simple_orbit.k,
+            simple_orbit.p,
+            simple_orbit.ecc,
+            simple_orbit.inc_deg.to_radians(),
+            simple_orbit.raan_deg.to_radians(),
+            simple_orbit.argp_deg.to_radians(),
+            simple_orbit.nu_deg.to_radians(),
             tof,
         );
 
@@ -348,68 +422,65 @@ mod test {
     }
 
     #[rstest]
-    fn test_short_farnocchia_coe(orbit: Orbit) {
+    fn test_short_farnocchia_coe(simple_orbit: Orbit) {
         let tof = 100.0;
         let expected_nu: f64 = 0.9265094210290502; // Computed with poliastro
-        //       computed_nu = 0.9265619416308579  // TODO: Can it be closer?
 
         let nu = farnocchia_coe(
-            orbit.k,
-            orbit.p,
-            orbit.ecc,
-            orbit.inc_deg.to_radians(),
-            orbit.raan_deg.to_radians(),
-            orbit.argp_deg.to_radians(),
-            orbit.nu_deg.to_radians(),
+            simple_orbit.k,
+            simple_orbit.p,
+            simple_orbit.ecc,
+            simple_orbit.inc_deg.to_radians(),
+            simple_orbit.raan_deg.to_radians(),
+            simple_orbit.argp_deg.to_radians(),
+            simple_orbit.nu_deg.to_radians(),
             tof,
         );
 
         println!("Expected nu: {}", expected_nu);
         println!("Computed nu: {}", nu);
-        assert!((nu - expected_nu).abs() < 1e-4);
+        assert!((nu - expected_nu).abs() < 1e-14);
     }
 
     #[rstest]
-    fn test_period_farnocchia_coe(orbit: Orbit) {
+    fn test_period_farnocchia_coe(simple_orbit: Orbit) {
         let tof = 5556.969701163016; // Computed with poliastro
-        let expected_nu: f64 = orbit.nu_deg.to_radians();
-        //       computed_nu = 0.8132502093265356  // TODO: Can it be closer?
+        let expected_nu: f64 = simple_orbit.nu_deg.to_radians();
 
         let nu = farnocchia_coe(
-            orbit.k,
-            orbit.p,
-            orbit.ecc,
-            orbit.inc_deg.to_radians(),
-            orbit.raan_deg.to_radians(),
-            orbit.argp_deg.to_radians(),
-            orbit.nu_deg.to_radians(),
+            simple_orbit.k,
+            simple_orbit.p,
+            simple_orbit.ecc,
+            simple_orbit.inc_deg.to_radians(),
+            simple_orbit.raan_deg.to_radians(),
+            simple_orbit.argp_deg.to_radians(),
+            simple_orbit.nu_deg.to_radians(),
             tof,
         );
 
         println!("Expected nu: {}", expected_nu);
         println!("Computed nu: {}", nu);
-        assert!((nu - expected_nu).abs() < 1e-10);
+        assert!((nu - expected_nu).abs() < 1e-14);
     }
 
     #[rstest]
-    fn test_long_farnocchia_coe(orbit: Orbit) {
+    fn test_long_farnocchia_coe(simple_orbit: Orbit) {
         let tof = 20000.;
         let expected_nu: f64 = -1.7102617293760711; // Computed with poliastro
-        //       computed_nu = -1.7113142537561092  // TODO: Can it be closer?
 
         let nu = farnocchia_coe(
-            orbit.k,
-            orbit.p,
-            orbit.ecc,
-            orbit.inc_deg.to_radians(),
-            orbit.raan_deg.to_radians(),
-            orbit.argp_deg.to_radians(),
-            orbit.nu_deg.to_radians(),
+            simple_orbit.k,
+            simple_orbit.p,
+            simple_orbit.ecc,
+            simple_orbit.inc_deg.to_radians(),
+            simple_orbit.raan_deg.to_radians(),
+            simple_orbit.argp_deg.to_radians(),
+            simple_orbit.nu_deg.to_radians(),
             tof,
         );
 
         println!("Expected nu: {}", expected_nu);
         println!("Computed nu: {}", nu);
-        assert!((nu - expected_nu).abs() < 1e-2);
+        assert!((nu - expected_nu).abs() < 1e-14);
     }
 }
