@@ -285,7 +285,7 @@ fn nu_from_delta_t(delta_t: f64, ecc: f64, k: f64, q: f64, delta: f64) -> f64 {
     }
 }
 
-fn farnocchia_coe(
+pub fn farnocchia_coe(
     k: f64,
     p: f64,
     ecc: f64,

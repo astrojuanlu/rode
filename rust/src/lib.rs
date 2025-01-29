@@ -4,6 +4,7 @@ use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
 use euler::{euler_method, euler_method_alt};
+use orbit::farnocchia_coe;
 
 /// A wrapper function to expose euler_method_demo to Python.
 ///
@@ -70,12 +71,27 @@ fn euler_method_demo_alt_py<'py>(
     Ok(result.into_pyarray(py))
 }
 
+#[pyfunction]
+fn farnocchia_coe_py(
+    k_kms: f64,
+    p_km: f64,
+    ecc: f64,
+    inc_rad: f64,
+    raan_rad: f64,
+    argp_rad: f64,
+    nu_rad: f64,
+    tof_s: f64,
+) -> PyResult<f64> {
+    Ok(farnocchia_coe(k_kms, p_km, ecc, inc_rad, raan_rad, argp_rad, nu_rad, tof_s))
+}
+
 /// A Python module implemented in Rust.
 #[pymodule]
 #[pyo3(name = "_rode")]
 fn rode(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(euler_method_demo_py, m)?)?;
     m.add_function(wrap_pyfunction!(euler_method_demo_alt_py, m)?)?;
+    m.add_function(wrap_pyfunction!(farnocchia_coe_py, m)?)?;
     Ok(())
 }
 

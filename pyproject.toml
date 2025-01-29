@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "rode"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 classifiers = [
     "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
@@ -12,7 +12,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
-    "numpy>=2.2.2",
+    "numpy<2.2",
 ]
 
 [tool.maturin]
@@ -22,5 +22,10 @@ module-name = "rode._rode"
 [tool.uv]
 # Rebuild package when any Rust files change
 cache-keys = [{file = "pyproject.toml"}, {file = "rust/Cargo.toml"}, {file = "**/*.rs"}]
+
+[dependency-groups]
+dev = [
+    "ipython>=8.31.0",
+]
 # Uncomment to build rust code in development mode
 # config-settings = { build-args = '--profile=dev' }
