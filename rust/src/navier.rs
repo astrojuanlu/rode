@@ -25,8 +25,7 @@ pub fn plate_displacement(
                 / ((mm as f64 / l_x).powi(2) + (nn as f64 / l_y).powi(2)).powi(2)
         }
     }
-    result *= 4.0 * p_load / (PI.powi(4) * d_rigidity * l_x * l_y);
-    result
+    result * 4.0 * p_load / (PI.powi(4) * d_rigidity * l_x * l_y)
 }
 
 pub fn plate_displacement_field(
