@@ -119,7 +119,7 @@ fn plate_displacement_field_py<'py>(
     l_y: f64,
     m_max: i32,
     n_max: i32,
-) -> PyResult<Bound<'py, PyArray2<f64>>> {
+) -> PyResult<()> {
     let xx_array = xx.as_array().to_owned();
     let yy_array = yy.as_array().to_owned();
     if xx_array.shape() != yy_array.shape() {
@@ -147,7 +147,7 @@ fn plate_displacement_field_py<'py>(
         m_max,
         n_max,
     );
-    Ok(ww)
+    Ok(())
 }
 
 /// A Python module implemented in Rust.
