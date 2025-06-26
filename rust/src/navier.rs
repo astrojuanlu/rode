@@ -1,6 +1,6 @@
 use std::f64::consts::PI;
 
-use numpy::ndarray::Array2;
+use numpy::ndarray::{Array2, ArrayViewMut2};
 
 pub fn plate_displacement(
     x: f64,
@@ -32,7 +32,7 @@ pub fn plate_displacement(
 pub fn plate_displacement_field(
     xx: &Array2<f64>,
     yy: &Array2<f64>,
-    ww: &mut Array2<f64>,
+    ww: &mut ArrayViewMut2<f64>,
     xi: f64,
     eta: f64,
     p_load: f64,

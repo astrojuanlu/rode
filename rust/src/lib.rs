@@ -1,4 +1,4 @@
-use numpy::{IntoPyArray, PyArray1, PyArray2, PyReadonlyArray1, PyReadonlyArray2};
+use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1, PyReadonlyArray2, PyReadwriteArray2};
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
@@ -107,10 +107,10 @@ fn plate_displacement_py(
 
 #[pyfunction]
 fn plate_displacement_field_py<'py>(
-    py: Python<'py>,
+    _py: Python<'py>,
     xx: PyReadonlyArray2<'py, f64>,
     yy: PyReadonlyArray2<'py, f64>,
-    ww: PyArray2<'py, f64>,
+    mut ww: PyReadwriteArray2<'py, f64>,
     xi: f64,
     eta: f64,
     p_load: f64,
@@ -123,16 +123,16 @@ fn plate_displacement_field_py<'py>(
     let xx_array = xx.as_array().to_owned();
     let yy_array = yy.as_array().to_owned();
     if xx_array.shape() != yy_array.shape() {
-        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+        return Err(pyo3::exceptions::PyValueError::new_err(
             "Input arrays xx and yy must have the same shape.",
         ));
     }
-    if ww.shape() != xx_array.shape() {
-        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+    let mut ww_array = ww.as_array_mut();
+    if ww_array.shape() != xx_array.shape() {
+        return Err(pyo3::exceptions::PyValueError::new_err(
             "Output array ww must have the same shape as xx and yy.",
         ));
     }
-    let ww_array = ww.as_array_mut();
 
     plate_displacement_field(
         &xx_array,

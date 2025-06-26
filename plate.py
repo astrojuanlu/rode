@@ -1,7 +1,7 @@
 import numpy as np
 import plotly.graph_objects as go
 
-from plate import plate_displacement_field
+from rode import plate_displacement_field_py
 
 
 if __name__ == "__main__":
@@ -38,21 +38,18 @@ if __name__ == "__main__":
 
     ww = np.zeros_like(xx)
 
-    plate_displacement_field(
+    plate_displacement_field_py(
         xx,
         yy,
         ww,
-        P,
         xi,
         eta,
+        P,
+        D,
         l_x,
         l_y,
-        h,
-        E,
-        nu,
-        D,
-        max_m=max_m,
-        max_n=max_n
+        max_m,
+        max_n
     )
 
     fig = go.Figure()
