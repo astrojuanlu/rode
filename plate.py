@@ -54,4 +54,4 @@ if __name__ == "__main__":
 
     fig = go.Figure()
     fig.add_surface(z=ww)
-    fig.show()
+    fig.show(renderer="browser")
