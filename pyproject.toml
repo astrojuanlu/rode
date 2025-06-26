@@ -15,6 +15,11 @@ dependencies = [
     "numpy<2.2",
 ]
 
+[project.optional-dependencies]
+plate = [
+    "plotly>=6.1.2",
+]
+
 [tool.maturin]
 features = ["pyo3/extension-module"]
 module-name = "rode._rode"

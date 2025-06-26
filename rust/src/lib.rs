@@ -1,9 +1,9 @@
-
-use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1};
+use numpy::{IntoPyArray, PyArray1, PyReadonlyArray1, PyReadonlyArray2, PyReadwriteArray2};
 use pyo3::prelude::*;
 use pyo3::types::PyAny;
 
 use euler::{euler_method, euler_method_alt};
+use navier::{plate_displacement, plate_displacement_field};
 use orbit::farnocchia_coe;
 
 /// A wrapper function to expose euler_method_demo to Python.
@@ -82,7 +82,72 @@ fn farnocchia_coe_py(
     nu_rad: f64,
     tof_s: f64,
 ) -> PyResult<f64> {
-    Ok(farnocchia_coe(k_kms, p_km, ecc, inc_rad, raan_rad, argp_rad, nu_rad, tof_s))
+    Ok(farnocchia_coe(
+        k_kms, p_km, ecc, inc_rad, raan_rad, argp_rad, nu_rad, tof_s,
+    ))
+}
+
+#[pyfunction]
+fn plate_displacement_py(
+    x: f64,
+    y: f64,
+    xi: f64,
+    eta: f64,
+    p_load: f64,
+    d_rigidity: f64,
+    l_x: f64,
+    l_y: f64,
+    m_max: i32,
+    n_max: i32,
+) -> PyResult<f64> {
+    Ok(plate_displacement(
+        x, y, xi, eta, p_load, d_rigidity, l_x, l_y, m_max, n_max,
+    ))
+}
+
+#[pyfunction]
+fn plate_displacement_field_py<'py>(
+    _py: Python<'py>,
+    xx: PyReadonlyArray2<'py, f64>,
+    yy: PyReadonlyArray2<'py, f64>,
+    mut ww: PyReadwriteArray2<'py, f64>,
+    xi: f64,
+    eta: f64,
+    p_load: f64,
+    d_rigidity: f64,
+    l_x: f64,
+    l_y: f64,
+    m_max: i32,
+    n_max: i32,
+) -> PyResult<()> {
+    let xx_array = xx.as_array().to_owned();
+    let yy_array = yy.as_array().to_owned();
+    if xx_array.shape() != yy_array.shape() {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "Input arrays xx and yy must have the same shape.",
+        ));
+    }
+    let mut ww_array = ww.as_array_mut();
+    if ww_array.shape() != xx_array.shape() {
+        return Err(pyo3::exceptions::PyValueError::new_err(
+            "Output array ww must have the same shape as xx and yy.",
+        ));
+    }
+
+    plate_displacement_field(
+        &xx_array,
+        &yy_array,
+        &mut ww_array,
+        xi,
+        eta,
+        p_load,
+        d_rigidity,
+        l_x,
+        l_y,
+        m_max,
+        n_max,
+    );
+    Ok(())
 }
 
 /// A Python module implemented in Rust.
@@ -92,8 +157,11 @@ fn rode(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(euler_method_demo_py, m)?)?;
     m.add_function(wrap_pyfunction!(euler_method_demo_alt_py, m)?)?;
     m.add_function(wrap_pyfunction!(farnocchia_coe_py, m)?)?;
+    m.add_function(wrap_pyfunction!(plate_displacement_py, m)?)?;
+    m.add_function(wrap_pyfunction!(plate_displacement_field_py, m)?)?;
     Ok(())
 }
 
 pub mod euler;
+pub mod navier;
 pub mod orbit;
