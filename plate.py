@@ -52,6 +52,10 @@ if __name__ == "__main__":
         max_n
     )
 
+    # Maximum displacement
+    max_w = np.max(np.abs(ww))
+    print(f"Maximum displacement: {max_w:.3e} m")
+
     fig = go.Figure()
     fig.add_surface(z=ww)
     fig.show(renderer="browser")

@@ -23,6 +23,10 @@ w(x, y; \xi, \eta) = \frac{4 P_c}{\pi^4 D L_x L_y} \sum_{m=1}^\infty \sum_{n=1}^
 $$
 
 ```
-$ uv run python plate.py
-...
+$ uv run --extra plate python plate.py
+Maximum displacement: 1.413e-04 m
 ```
+
+Solution from https://www.efunda.com/formulae/solid_mechanics/plates/calculators/SSSS_PPoint.cfm:
+
+![Plate solution](plate.png)
