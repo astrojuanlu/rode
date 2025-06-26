@@ -14,7 +14,12 @@ $ uv run python euler.py
 
 ## Farnocchia orbit propagation algorithm
 
-[TBC]
+````
+$ uv run python orbit.py
+nu = -97.98871736851365 deg
+```
+
+![Farnocchia orbit propagation algorithm](farnocchia.png)
 
 ## Plate deflection
 
