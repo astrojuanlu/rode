@@ -14,7 +14,7 @@ $ uv run python euler.py
 
 ## Farnocchia orbit propagation algorithm
 
-````
+```
 $ uv run python orbit.py
 nu = -97.98871736851365 deg
 ```
