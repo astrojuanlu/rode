@@ -17,6 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 plate = [
+    "numba>=0.61.2",
     "plotly>=6.1.2",
 ]
 

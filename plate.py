@@ -3,6 +3,7 @@ import plotly.graph_objects as go
 import time
 
 from rode import plate_displacement_field_py, plate_displacement_field_par_py
+from rode.navier import plate_displacement_field_py as plate_displacement_field_py_pure
 
 
 if __name__ == "__main__":
@@ -37,47 +38,103 @@ if __name__ == "__main__":
     y = np.linspace(0, l_y, num=NUM_POINTS)
     xx, yy = np.meshgrid(x, y)
 
-    # Test serial version
-    ww_serial = np.zeros_like(xx)
+    print("Testing four implementations:")
+    print("1. Pure Python (no JIT)")
+    print("2. Python + Numba JIT")
+    print("3. Rust serial")
+    print("4. Rust parallel")
+    print()
 
+    # Test 1: Pure Python version (no JIT)
+    ww_python_pure = np.zeros_like(xx)
+    start_time = time.time()
+    plate_displacement_field_py_pure.py_func(
+        xx, yy, ww_python_pure, xi, eta, P, D, l_x, l_y, max_m, max_n
+    )
+    python_pure_time = time.time() - start_time
+
+    # Test 2: Python + Numba JIT version
+    ww_python_numba = np.zeros_like(xx)
+    start_time = time.time()
+    plate_displacement_field_py_pure(
+        xx, yy, ww_python_numba, xi, eta, P, D, l_x, l_y, max_m, max_n
+    )
+    python_numba_time = time.time() - start_time
+
+    # Test 3: Rust serial version
+    ww_rust_serial = np.zeros_like(xx)
     start_time = time.time()
     plate_displacement_field_py(
-        xx, yy, ww_serial, xi, eta, P, D, l_x, l_y, max_m, max_n
+        xx, yy, ww_rust_serial, xi, eta, P, D, l_x, l_y, max_m, max_n
     )
-    serial_time = time.time() - start_time
+    rust_serial_time = time.time() - start_time
 
-    # Test parallel version
-    ww_parallel = np.zeros_like(xx)
-
+    # Test 4: Rust parallel version
+    ww_rust_parallel = np.zeros_like(xx)
     start_time = time.time()
     plate_displacement_field_par_py(
-        xx, yy, ww_parallel, xi, eta, P, D, l_x, l_y, max_m, max_n
+        xx, yy, ww_rust_parallel, xi, eta, P, D, l_x, l_y, max_m, max_n
     )
-    parallel_time = time.time() - start_time
+    rust_parallel_time = time.time() - start_time
 
-    # Verify results are identical
-    max_diff = np.max(np.abs(ww_serial - ww_parallel))
-    print(f"Maximum difference between serial and parallel: {max_diff:.2e}")
+    # Verify all results are identical
+    print("=== Correctness Check ===")
+    max_diff_pure_numba = np.max(np.abs(ww_python_pure - ww_python_numba))
+    max_diff_numba_rust_serial = np.max(np.abs(ww_python_numba - ww_rust_serial))
+    max_diff_rust_serial_parallel = np.max(np.abs(ww_rust_serial - ww_rust_parallel))
+    max_diff_pure_rust_parallel = np.max(np.abs(ww_python_pure - ww_rust_parallel))
 
-    if max_diff < 1e-15:
-        print("✅ Results are identical!")
+    print(f"Max difference (Pure Python vs Python+Numba): {max_diff_pure_numba:.2e}")
+    print(
+        f"Max difference (Python+Numba vs Rust serial): {max_diff_numba_rust_serial:.2e}"
+    )
+    print(
+        f"Max difference (Rust serial vs parallel): {max_diff_rust_serial_parallel:.2e}"
+    )
+    print(
+        f"Max difference (Pure Python vs Rust parallel): {max_diff_pure_rust_parallel:.2e}"
+    )
+
+    all_identical = (
+        max_diff_pure_numba < 1e-14
+        and max_diff_numba_rust_serial < 1e-14
+        and max_diff_rust_serial_parallel < 1e-14
+        and max_diff_pure_rust_parallel < 1e-14
+    )
+
+    if all_identical:
+        print("✅ All four implementations produce identical results!")
     else:
-        print("❌ Results differ!")
+        print("❌ Results differ between implementations!")
 
     # Performance comparison
-    print(f"Serial time: {serial_time:.4f} seconds")
-    print(f"Parallel time: {parallel_time:.4f} seconds")
-    if parallel_time > 0:
-        speedup = serial_time / parallel_time
-        print(f"Speedup: {speedup:.2f}x")
+    print()
+    print("=== Performance Comparison ===")
+    print(f"Pure Python time: {python_pure_time:.4f} seconds")
+    print(f"Python + Numba time: {python_numba_time:.4f} seconds")
+    print(f"Rust serial time: {rust_serial_time:.4f} seconds")
+    print(f"Rust parallel time: {rust_parallel_time:.4f} seconds")
+
+    if python_pure_time > 0:
+        numba_speedup = python_pure_time / python_numba_time
+        rust_serial_speedup = python_pure_time / rust_serial_time
+        rust_parallel_speedup = python_pure_time / rust_parallel_time
+        parallel_vs_serial_speedup = rust_serial_time / rust_parallel_time
+
+        print(f"Numba speedup vs Pure Python: {numba_speedup:.2f}x")
+        print(f"Rust serial speedup vs Pure Python: {rust_serial_speedup:.2f}x")
+        print(f"Rust parallel speedup vs Pure Python: {rust_parallel_speedup:.2f}x")
+        print(
+            f"Rust parallel speedup vs Rust serial: {parallel_vs_serial_speedup:.2f}x"
+        )
 
     # Maximum displacement
-    max_w = np.max(np.abs(ww_serial))
-    print(f"Maximum displacement: {max_w:.3e} m")
+    max_w = np.max(np.abs(ww_rust_serial))
+    print(f"\nMaximum displacement: {max_w:.3e} m")
 
     fig = go.Figure()
-    fig.add_surface(z=ww_serial, name="Serial")
+    fig.add_surface(z=ww_rust_serial, name="Displacement")
     fig.update_layout(
-        title="Plate Displacement (Serial and Parallel versions are identical)"
+        title="Plate Displacement (All four implementations produce identical results)"
     )
     fig.show(renderer="browser")
