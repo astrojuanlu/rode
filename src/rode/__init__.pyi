@@ -9,14 +9,12 @@ def euler_method_demo_py(
     t_end: float,
     num_points: int,
 ) -> onpt.Array1D[np.float]: ...
-
 def euler_method_demo_alt_py(
     dx_dt: t.Callable[[float], float],
     y0: float,
     t: np.ndarray,
     h: float,
 ) -> onpt.Array1D[np.float]: ...
-
 def farnocchia_coe_py(
     k_kms: float,
     p_km: float,
